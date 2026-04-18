@@ -32,7 +32,9 @@ class TradingAccount:
         if hh and hh.money >= amount:
             hh.money -= amount
             self.balance += amount
-            self.log.append(f"[{self._timestamp()}] {amount}§ auf Trading-Konto eingezahlt")
+            log_entry = f"[{self._timestamp()}] {amount}§ auf Trading-Konto eingezahlt"
+            self.log.append(log_entry)
+            self._post_to_bulletin_board(log_entry)
             self._save()
             return True
         return False
@@ -44,7 +46,9 @@ class TradingAccount:
             if hh:
                 self.balance -= amount
                 hh.money += amount
-                self.log.append(f"[{self._timestamp()}] {amount}§ vom Trading-Konto abgehoben")
+                log_entry = f"[{self._timestamp()}] {amount}§ vom Trading-Konto abgehoben"
+                self.log.append(log_entry)
+                self._post_to_bulletin_board(log_entry)
                 self._save()
                 return True
         return False
@@ -57,7 +61,9 @@ class TradingAccount:
         if self.balance >= cost:
             self.balance -= cost
             self.portfolio[crypto_name] = self.portfolio.get(crypto_name, 0) + qty
-            self.log.append(f"[{self._timestamp()}] {qty}x {crypto_name} für {cost:.2f}§ gekauft @ {self.prices[crypto_name]:.2f}§/Stk")
+            log_entry = f"[{self._timestamp()}] {qty}x {crypto_name} für {cost:.2f}§ gekauft @ {self.prices[crypto_name]:.2f}§/Stk"
+            self.log.append(log_entry)
+            self._post_to_bulletin_board(log_entry)
             self._save()
             return True
         return False
@@ -71,7 +77,9 @@ class TradingAccount:
         self.portfolio[crypto_name] -= qty
         if self.portfolio[crypto_name] <= 0:
             del self.portfolio[crypto_name]
-        self.log.append(f"[{self._timestamp()}] {qty}x {crypto_name} für {revenue:.2f}§ verkauft @ {self.prices[crypto_name]:.2f}§/Stk")
+        log_entry = f"[{self._timestamp()}] {qty}x {crypto_name} für {revenue:.2f}§ verkauft @ {self.prices[crypto_name]:.2f}§/Stk"
+        self.log.append(log_entry)
+        self._post_to_bulletin_board(log_entry)
         self._save()
         return True
 
@@ -95,8 +103,35 @@ class TradingAccount:
             if len(self.price_history[crypto]) > 30:
                 self.price_history[crypto].pop(0)
         
-        self.log.append(f"[{self._timestamp()}] Tageskurse aktualisiert")
+        log_entry = f"[{self._timestamp()}] Tageskurse aktualisiert"
+        self.log.append(log_entry)
+        self._post_to_bulletin_board(log_entry)
         self._save()
+
+    def _post_to_bulletin_board(self, message):
+        """Poste eine Nachricht an die Pinnwand (Bulletin Board)"""
+        try:
+            from ui.ui_dialog_notification import UiDialogNotification
+            from event_testing.resolver import SingleSimResolver
+            
+            # Hole den ersten Sim im Haushalt für die Benachrichtigung
+            hh = services.household_manager().get(self.household_id)
+            if hh and len(hh.sim_info_list) > 0:
+                sim_info = hh.sim_info_list[0]
+                resolver = SingleSimResolver(sim_info)
+                
+                # Erstelle eine Benachrichtigung für die Pinnwand
+                notification = UiDialogNotification(
+                    sim_info,
+                    resolver,
+                    title="Crypto Trading Update",
+                    text=message,
+                    icon=None
+                )
+                notification.show_dialog()
+        except Exception as e:
+            # Falls Pinnwand nicht verfügbar, einfach im Log belassen
+            pass
 
     def get_total_value(self):
         """Berechne Gesamtwert (Kontostand + Portfolio-Wert)"""
