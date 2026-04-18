@@ -3,31 +3,36 @@ CRYPTO TRADING MOD FÜR SIMS 4 - INSTALLATIONSANLEITUNG
 =================================================================
 
 WICHTIG: Der Mod wird nicht geladen, wenn die Ordnerstruktur falsch ist!
+Sims 4 kann .ts4script-Dateien nur laden, wenn sie MAXIMAL 1 Ordner tief sind!
 
-SCHRITT 1: DATEIEN KOPIEREN
-----------------------------
-Kopiere ALLE .py-Dateien aus dem Ordner "CryptoTradingMod" direkt in:
+SCHRITT 1: DATEIEN KOPIEREN (KRITISCH!)
+--------------------------------------------
+Kopiere den gesamten Ordner "sims4crypto" direkt in:
 Dokumente\Electronic Arts\Die Sims 4\Mods\
 
-ODER in EINEN einzigen Unterordner:
-Dokumente\Electronic Arts\Die Sims 4\Mods\CryptoTrading\
-
-RICHTIG:
+RICHTIG (funktioniert):
 --------
 Mods/
-├── __init__.py
-├── trading_core.py
-├── trading_skill.py
-├── interactions.py
-├── trading_ui.py
-└── ui_trading_screen.xml
+└── sims4crypto/
+    ├── __init__.ts4script
+    ├── trading_core.ts4script
+    ├── trading_skill.ts4script
+    ├── interactions.ts4script
+    ├── trading_ui.ts4script
+    └── ui_trading_screen.xml
 
-FALSCH (zu tief verschachtelt):
+FALSCH (zu tief verschachtelt - funktioniert NICHT):
 --------------------------------
+Mods/
+└── CryptoTradingMod/
+    └── sims4crypto/
+        └── *.ts4script  ← ZU TIEF! Wird nicht geladen!
+
+ODER FALSCH:
 Mods/
 └── Crypto-Trading-App-f-r-Sims-4-main/
     └── Crypto-Trading-App-f-r-Sims-4-main/
-        └── __init__.py  ← ZU TIEF!
+        └── *.ts4script  ← VIEL ZU TIEF!
 
 
 SCHRITT 2: EINSTELLUNGEN IM SPIEL
@@ -43,23 +48,24 @@ SCHRITT 2: EINSTELLUNGEN IM SPIEL
 
 SCHRITT 3: CACHE LÖSCHEN (empfohlen)
 -------------------------------------
-Lösche im Sims 4 Hauptinstallationsordner:
+Lösche im Sims 4 Hauptinstallationsordner (wo TheSims4.exe liegt):
 - localthumbcache.package (Datei löschen)
 - cache/ (gesamten Ordnerinhalt löschen)
 
 
 SCHRITT 4: ÜBERPRÜFUNG
 -----------------------
-Beim Spielstart sollte erscheinen:
-"[Lukas_CryptoTradingMod] Crypto Trading App v1.0 geladen!"
+Beim Spielstart sollte eine Meldung erscheinen mit allen geladenen 
+Skript-Mods. Dort muss "sims4crypto" oder "CryptoTrading" stehen.
 
 Wenn diese Meldung kommt: ✅ Mod funktioniert!
+Wenn keine Meldung kommt: ❌ Ordnerstruktur prüfen!
 
 
 SCHRITT 5: SPIELEN
 -------------------
 1. Klicke auf dein Handy oder den Computer
-2. Wähle "Trading-App öffnen"
+2. Wähle "Trading-App öffnen" oder ähnlich
 3. Zahle Geld ein (mindestens 100§ empfohlen)
 4. Kaufe deine erste Kryptowährung
 5. Beobachte die täglichen Kursänderungen!
@@ -67,23 +73,25 @@ SCHRITT 5: SPIELEN
 
 FEHLERBEHEBUNG
 --------------
-Problem: Mod wird nicht geladen
+Problem: Mod wird nicht geladen / Keine Interaktionen sichtbar
 Lösung: 
-- Überprüfe die Ordnerstruktur (max. 1 Ebene tief!)
+- Überprüfe die Ordnerstruktur (MAXIMAL 1 Ebene tief!)
+- Die .ts4script-Dateien müssen in Mods/sims4crypto/ liegen
+- Nicht in Mods/CryptoTradingMod/sims4crypto/ (zu tief!)
 - Lösche localthumbcache.package
 - Stelle sicher, dass Skript-Mods aktiviert sind
 - Starte das Spiel komplett neu
 
-Problem: Keine Interaktion im Handy/PC-Menü
+Problem: Andere Mods funktionieren, aber dieser nicht
 Lösung:
-- Spiel neu starten nach Aktivierung der Skript-Mods
-- Cache löschen
-- Andere Mods temporär deaktivieren zum Testen
+- Dieser Mod hat .ts4script-Dateien, die spezielle Anforderungen haben
+- Verschiebe den Inhalt von sims4crypto direkt nach Mods/sims4crypto/
+- Entferne übergeordnete Ordner wie "CryptoTradingMod" oder Download-Namen
 
-Problem: Keine Benachrichtigungen
+Problem: Keine Benachrichtigungen auf der Pinnwand
 Lösung:
 - Das ist normal, wenn Pinnwand nicht verfügbar
-- Alle Aktionen werden trotzdem gespeichert
+- Alle Aktionen werden trotzdem intern gespeichert
 
 
 VIEL SPAß BEIM TRADEN! 🚀📈
