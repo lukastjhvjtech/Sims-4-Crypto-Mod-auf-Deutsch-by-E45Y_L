@@ -31,19 +31,63 @@ Eine Mod die es ermöglicht in Sims 4 in Kryptowährungen zu investieren - über
 - Einzahlen und Abheben von Simoleons
 - Transaktionsverlauf einsehbar
 
+### 🆕 Trading-Fähigkeit (Skill-System)
+- **10 Skill-Level** von "Anfänger" bis "Legendär"
+- **XP sammeln** durch:
+  - Erste Einzahlung (+5 XP)
+  - Krypto-Käufe (+10 XP)
+  - Krypto-Verkäufe (+15 XP)
+  - Profitable Trades (+25 XP)
+  - Portfolio-Meilensteine (bis zu +500 XP)
+- **Level-Boni**:
+  - Level 1: Keine Gebühren
+  - Level 2: +2% bessere Kaufpreise
+  - Level 3: +5% bessere Kaufpreise
+  - Level 5: +12% bessere Kaufpreise
+  - Level 10: +35% bessere Kaufpreise!
+- **Freischaltbare Features**:
+  - Preis-Charts (Level 2)
+  - Portfolio-Analyse (Level 3)
+  - Tägliche Prognosen (Level 4)
+  - Erweiterte Charts (Level 5)
+  - Risiko-Analyse (Level 6)
+  - Automatische Alerts (Level 7)
+  - Premium-Analysen (Level 8)
+  - Exklusive Coins (Level 9)
+  - Alle Features (Level 10)
+
+### 🏦 Zwischenkonto-System
+- **Separates Trading-Konto** - unabhängig vom Haushaltsgeld
+- **Startguthaben: 0§** - du musst erst Geld einzahlen!
+- Einzahlen vom Haushaltskonto jederzeit möglich
+- Gewinne zurück aufs Haushaltskonto übertragbar
+- Alle Transaktionen werden protokolliert
+
+### 📌 Pinnwand-Protokoll
+- **Alle Transaktionen** erscheinen auf der Pinnwand:
+  - Einzahlungen/Abhebungen
+  - Käufe/Verkäufe mit Details
+  - Tägliche Kursaktualisierungen
+  - Skill Level-Ups mit Boni-Anzeige
+  - Portfolio-Meilensteine
+- Zeitstempel für jede Aktion
+- Übersichtlicher Verlauf aller Aktivitäten
+
 ## 📱 Benutzung
 
 ### Erste Schritte
 1. Öffne das Handy deines Sims oder einen Computer
 2. Wähle "Crypto Trader" aus dem Menü
-3. Zahle Startkapital ein (Standard: 1000§ Trading-Guthaben)
+3. **Zahle Startkapital ein** (du beginnst mit 0§!)
 4. Kaufe deine ersten Kryptowährungen!
+5. Sammle XP und steige im Level auf!
 
 ### Trading-Tipps
 - Beobachte die Charts bevor du kaufst
 - Diversifiziere dein Portfolio
 - Verkaufe bei hohen Kursen, kaufe bei tiefen
 - Behalte den Überblick über deinen Gesamtgewinn
+- Steige im Level auf für bessere Preise!
 
 ## 🛠️ Installation
 
@@ -59,7 +103,8 @@ Eine Mod die es ermöglicht in Sims 4 in Kryptowährungen zu investieren - über
 ```
 CryptoTradingMod/
 ├── __init__.py           # Hauptmodul, lädt die Mod
-├── trading_core.py       # Kernlogik (Konten, Preise, Käufe)
+├── trading_core.py       # Kernlogik (Konten, Preise, Käufe, Skills)
+├── trading_skill.py      # Skill-Definitionen (Level, XP, Boni)
 ├── trading_ui.py         # Chart-Generierung
 ├── interactions.py       # Handy/PC Interaktionen
 ├── ui_trading_screen.xml # UI-Layout der App
@@ -80,11 +125,18 @@ from CryptoTradingMod.interactions import (
 )
 
 from CryptoTradingMod.trading_core import get_account
+from CryptoTradingMod.trading_skill import get_skill_level, SKILL_LEVELS
 
 # Account eines Haushalts abrufen
 account = get_account(household_id)
 print(f"Guthaben: {account.balance}§")
 print(f"Portfolio: {account.portfolio}")
+print(f"Trading XP: {account.trading_xp}")
+
+# Skill-Info
+skill_info = account.get_skill_info()
+print(f"Level: {skill_info['level']} - {skill_info['name']}")
+print(f"Bonus: {skill_info['bonus']}")
 ```
 
 ## ⚠️ Wichtig
@@ -97,9 +149,12 @@ print(f"Portfolio: {account.portfolio}")
 ## 🎮 Gameplay
 
 Die Mod fügt ein komplettes Trading-System hinzu:
-- Startkapital von 1000§ auf einem separaten Trading-Konto
+- **Start bei 0§** auf einem separaten Trading-Konto
 - Unabhängig vom normalen Haushaltsgeld
 - Sicher gespeichert pro Haushalt
 - Überlebt Spielstände und Neustarts
+- Skill-System mit 10 Leveln und progressiven Boni
+- Automatische Protokollierung aller Aktionen auf der Pinnwand
 
 Viel Erfolg beim Traden! 🚀📊
+
