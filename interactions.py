@@ -46,6 +46,9 @@ def open_trading_app(sim, device_type="phone"):
     if portfolio_summary:
         generate_portfolio_chart(portfolio_summary, account.prices)
     
+    # Hole Skill-Informationen
+    skill_info = account.get_skill_info()
+    
     # UI öffnen (im echten Mod würde hier das TS4-UI System genutzt)
     # show_ui_screen("ui_trading_screen.xml", data=account_data)
     
@@ -56,7 +59,10 @@ def open_trading_app(sim, device_type="phone"):
         "prices": account.prices,
         "total_value": account.get_total_value(),
         "log": account.log[-10:],  # Letzte 10 Log-Einträge
-        "device_type": device_type
+        "device_type": device_type,
+        "skill_info": skill_info,  # Neue Skill-Informationen
+        "total_invested": account.total_invested,
+        "profitable_trades": account.profitable_trades
     }
 
 def buy_crypto_action(sim, crypto_name, quantity):
