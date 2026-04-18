@@ -1,0 +1,90 @@
+=================================================================
+CRYPTO TRADING MOD FÜR SIMS 4 - INSTALLATIONSANLEITUNG
+=================================================================
+
+WICHTIG: Der Mod wird nicht geladen, wenn die Ordnerstruktur falsch ist!
+
+SCHRITT 1: DATEIEN KOPIEREN
+----------------------------
+Kopiere ALLE .py-Dateien aus dem Ordner "CryptoTradingMod" direkt in:
+Dokumente\Electronic Arts\Die Sims 4\Mods\
+
+ODER in EINEN einzigen Unterordner:
+Dokumente\Electronic Arts\Die Sims 4\Mods\CryptoTrading\
+
+RICHTIG:
+--------
+Mods/
+├── __init__.py
+├── trading_core.py
+├── trading_skill.py
+├── interactions.py
+├── trading_ui.py
+└── ui_trading_screen.xml
+
+FALSCH (zu tief verschachtelt):
+--------------------------------
+Mods/
+└── Crypto-Trading-App-f-r-Sims-4-main/
+    └── Crypto-Trading-App-f-r-Sims-4-main/
+        └── __init__.py  ← ZU TIEF!
+
+
+SCHRITT 2: EINSTELLUNGEN IM SPIEL
+----------------------------------
+1. Starte Die Sims 4
+2. Gehe zu Optionen → Sonstiges
+3. Aktiviere BEIDE Optionen:
+   ☑ Benutzerdefinierte Inhalte und Mods zulassen
+   ☑ Skript-Mods zulassen
+4. Klicke auf "Änderungen anwenden"
+5. Starte das Spiel NEU
+
+
+SCHRITT 3: CACHE LÖSCHEN (empfohlen)
+-------------------------------------
+Lösche im Sims 4 Hauptinstallationsordner:
+- localthumbcache.package (Datei löschen)
+- cache/ (gesamten Ordnerinhalt löschen)
+
+
+SCHRITT 4: ÜBERPRÜFUNG
+-----------------------
+Beim Spielstart sollte erscheinen:
+"[Lukas_CryptoTradingMod] Crypto Trading App v1.0 geladen!"
+
+Wenn diese Meldung kommt: ✅ Mod funktioniert!
+
+
+SCHRITT 5: SPIELEN
+-------------------
+1. Klicke auf dein Handy oder den Computer
+2. Wähle "Trading-App öffnen"
+3. Zahle Geld ein (mindestens 100§ empfohlen)
+4. Kaufe deine erste Kryptowährung
+5. Beobachte die täglichen Kursänderungen!
+
+
+FEHLERBEHEBUNG
+--------------
+Problem: Mod wird nicht geladen
+Lösung: 
+- Überprüfe die Ordnerstruktur (max. 1 Ebene tief!)
+- Lösche localthumbcache.package
+- Stelle sicher, dass Skript-Mods aktiviert sind
+- Starte das Spiel komplett neu
+
+Problem: Keine Interaktion im Handy/PC-Menü
+Lösung:
+- Spiel neu starten nach Aktivierung der Skript-Mods
+- Cache löschen
+- Andere Mods temporär deaktivieren zum Testen
+
+Problem: Keine Benachrichtigungen
+Lösung:
+- Das ist normal, wenn Pinnwand nicht verfügbar
+- Alle Aktionen werden trotzdem gespeichert
+
+
+VIEL SPAß BEIM TRADEN! 🚀📈
+=================================================================
