@@ -1,17 +1,15 @@
 ```
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Compressed archives
+*.tar.gz
 
-# Dependencies
-.venv/
-venv/
-env/
+# Python artifacts (from old Python files that were deleted)
+*.pyc
+__pycache__/
+
+# Environment files
 .env
 .env.local
-.env.*
+*.env.*
 
 # Logs
 *.log
@@ -19,18 +17,8 @@ env/
 # Temporary files
 *.tmp
 *.swp
-*.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# IDE
+# Editors
 .vscode/
 .idea/
 ```
