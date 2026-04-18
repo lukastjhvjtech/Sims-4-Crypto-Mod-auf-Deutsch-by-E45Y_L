@@ -1,0 +1,21 @@
+<Root>
+  <Screen Name="TradingApp" Width="400" Height="550" Background="#111111">
+    <Header Text="Trading Zwischenkonto" FontSize="16" Color="#ffffff"/>
+    <Text Name="Balance" Text="Kontostand: 0 §" Y="30" Color="#4ade80"/>
+    
+    <ScrollList Y="60" Height="200">
+      <ListItem>
+        <Text Name="StockName" Text="SimTech"/>
+        <Image Name="ChartPreview" Path="charts/SimTech.png" Width="150" Height="60"/>
+        <Button Name="Buy" Text="Kaufen" OnClick="buy_stock"/>
+        <Button Name="Sell" Text="Verkaufen" OnClick="sell_stock"/>
+      </ListItem>
+    </ScrollList>
+
+    <ScrollList Name="LogPanel" Y="300" Height="180" Background="#1a1a1a">
+      <Text Name="LogEntry" Text="[...]"/>
+    </ScrollList>
+
+    <Button Name="Deposit" Text="Einzahlen" Y="500" OnClick="deposit_funds"/>
+  </Screen>
+</Root>
