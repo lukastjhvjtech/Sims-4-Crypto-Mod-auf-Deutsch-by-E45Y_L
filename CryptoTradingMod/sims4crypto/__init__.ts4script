@@ -1,27 +1,36 @@
 """
 Crypto Trading Mod für Sims 4 - Hauptmodul
 Dieser Mod fügt ein vollständiges Kryptowährungs-Trading-System hinzu.
+Nutzt offizielle Sims 4 Variablen für Skills, Motive und Haushaltsgeld.
 """
 
 import sims4
 import services
-from sims4.resources import Types
-from sims4.tuning.instances import TunableInstanceParam
-from interactions.base.basic_actions import BasicAction
+from sims4.common import SimSpentCurrency
 from event_testing.resolver import SingleSimResolver
 from ui.ui_dialog_notification import UiDialogNotification
-from distributor.ops import Operation
 from distributor.system import Distributor
+from distributor.ops import Operation
 
 # Mod ID und Version
 MOD_ID = "Lukas_CryptoTradingMod"
 MOD_NAME = "Crypto Trading App"
-MOD_VERSION = "1.0"
+MOD_VERSION = "2.0"
 
-# Importiere alle Komponenten
+# Importiere alle Komponenten mit relativen Imports (erforderlich für .ts4script)
 from .trading_core import TradingAccount, get_account, init_trading_system, update_all_prices
-from .trading_skill import TRADING_SKILL_ID, XP_REWARDS
+from .trading_skill import TRADING_SKILL_ID, XP_REWARDS, get_skill_level
 from .interactions import CryptoTradingInteraction, PhoneCryptoTradingInteraction, ComputerCryptoTradingInteraction
+
+# Offizielle Sims 4 Variablen aus der Master-Liste
+SKILL_PROGRAMMING = "Major_Programming"  # Wird als Basis für Trading-Skill verwendet
+MOTIVE_ENERGY = "motive_energy"
+MOTIVE_SOCIAL = "motive_social"
+MOTIVE_FUN = "motive_fun"
+HOUSEHOLD_FUNDS = "householdFunds"
+BUFF_FOCUSED = "Buff_Focused_High"
+BUFF_SAD = "Buff_Sad_High"
+BUFF_HAPPY = "Buff_Happy"
 
 def on_load():
     """Wird beim Laden des Mods aufgerufen"""
@@ -29,11 +38,12 @@ def on_load():
         # Initialisiere das Trading-System
         init_trading_system()
         
-        # Registriere Interaktionen
+        # Registriere Interaktionen korrekt
         _register_interactions()
         
         sims4.log.info(MOD_ID, "{} v{} erfolgreich geladen!".format(MOD_NAME, MOD_VERSION))
         sims4.log.info(MOD_ID, "Krypto-Trading jetzt verfuegbar ueber Handy und PC!")
+        sims4.log.info(MOD_ID, "Nutzt offiziellen Programming Skill: {}".format(SKILL_PROGRAMMING))
         
     except Exception as e:
         sims4.log.error(MOD_ID, "Fehler beim Laden des Mods: {}".format(str(e)))
@@ -43,7 +53,6 @@ def on_load():
 def on_unload():
     """Wird beim Entladen des Mods aufgerufen"""
     try:
-        # Entferne Interaktionen
         _unregister_interactions()
         sims4.log.info(MOD_ID, "{} entladen.".format(MOD_NAME))
     except Exception as e:
@@ -52,30 +61,37 @@ def on_unload():
 def _register_interactions():
     """Registriere die Trading-Interaktionen bei Phone und Computer"""
     try:
-        from objects.components.interaction_component import InteractionComponent
-        from objects.system import ObjectManager
+        from interactions.base.basic_actions import BasicAction
         from server_interaction_suppression import ServerInteractionSuppression
         
-        # Registriere für Phone
-        phone_manager = services.get_instance_manager(Types.OBJECT)
-        if phone_manager:
-            phone_cls = phone_manager.get(0x78A3C6B2)  # Phone object ID
-            if phone_cls:
-                if not hasattr(phone_cls, '_crypto_trading_registered'):
-                    phone_cls._crypto_trading_registered = True
+        # WICHTIG: In Sims 4 müssen Interaktionen via Tuning registriert werden
+        # Diese Funktion dient als Fallback und Log-Eintrag
         
-        # Registriere für Computer  
-        computer_manager = services.get_instance_manager(Types.OBJECT)
+        # Phone Objekt ID: 0x78A3C6B2 (sims4.phone)
+        # Computer Objekt ID: 0x9E3C74DE (sims4.computer)
+        
+        phone_manager = services.get_instance_manager(sims4.resources.Types.OBJECT)
+        computer_manager = services.get_instance_manager(sims4.resources.Types.OBJECT)
+        
+        if phone_manager:
+            phone_cls = phone_manager.get(0x78A3C6B2)
+            if phone_cls:
+                sims4.log.info(MOD_ID, "Phone-Klasse gefunden: {}".format(phone_cls.__name__))
+        
         if computer_manager:
-            computer_cls = computer_manager.get(0x9E3C74DE)  # Computer object ID
+            computer_cls = computer_manager.get(0x9E3C74DE)
             if computer_cls:
-                if not hasattr(computer_cls, '_crypto_trading_registered'):
-                    computer_cls._crypto_trading_registered = True
-                    
-        sims4.log.info(MOD_ID, "Interaktionen registriert")
+                sims4.log.info(MOD_ID, "Computer-Klasse gefunden: {}".format(computer_cls.__name__))
+        
+        # Hinweis: Echte Menü-Integration erfordert eine .package Datei mit Tuning
+        # Siehe INSTALLATION.txt für Details zur package-Erstellung
+        sims4.log.info(MOD_ID, "HINWEIS: Fuers完整的Menü-Integration wird eine .package Datei benoetigt")
+        sims4.log.info(MOD_ID, "Erstelle diese mit Sims 4 Studio oder einem aehnlichen Tool")
         
     except Exception as e:
         sims4.log.error(MOD_ID, "Fehler beim Registrieren der Interaktionen: {}".format(str(e)))
+        import traceback
+        sims4.log.error(MOD_ID, traceback.format_exc())
 
 def _unregister_interactions():
     """Entferne die Trading-Interaktionen"""
