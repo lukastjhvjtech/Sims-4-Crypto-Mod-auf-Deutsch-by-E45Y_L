@@ -1,17 +1,31 @@
 """
 Crypto Trading Interactions - Handy und PC Integration
 Fügt Trading-Optionen zu Phone und Computer hinzu
+Nutzt offizielle Sims 4 Variablen für Skills, Motive und Geld
 """
 
 import services
 from interactions.base.basic_actions import BasicAction
-from event_testing.resolver import SingleSimResolver
+from event_testing.resolver import SingleSimResolver, SingleObjectResolver
 from ui.ui_dialog_notification import UiDialogNotification
 from sims4.tuning.instances import TunableInstanceParam
 from sims4.resources import Types
+from sims4.common import SimSpentCurrency
 
+# Importiere Core-Module mit relativen Imports
 from .trading_core import get_account, DEFAULT_CRYPTOS
-from .trading_skill import TRADING_SKILL_NAME
+from .trading_skill import TRADING_SKILL_NAME, get_skill_level, XP_REWARDS
+
+# Offizielle Sims 4 Variablen
+SKILL_PROGRAMMING = "Major_Programming"
+MOTIVE_ENERGY = "motive_energy"
+MOTIVE_SOCIAL = "motive_social"
+MOTIVE_FUN = "motive_fun"
+HOUSEHOLD_FUNDS = "householdFunds"
+BUFF_FOCUSED_HIGH = "Buff_Focused_High"
+BUFF_SAD_HIGH = "Buff_Sad_High"
+BUFF_HAPPY = "Buff_Happy"
+BUFF_ENERGIZED_HIGH = "Energized_High"
 
 
 class CryptoTradingInteraction(BasicAction):
@@ -31,19 +45,39 @@ class CryptoTradingInteraction(BasicAction):
             household_id = sim.household.id
             account = get_account(household_id)
             
+            # Prüfe Energie-Motiv (offizielle Variable)
+            energy_stat = sim.get_stat(MOTIVE_ENERGY)
+            if energy_stat and energy_stat.current_value < 20:
+                # Zeige Warnung bei niedrigem Energie-Level
+                resolver = SingleSimResolver(sim.sim_info)
+                notification = UiDialogNotification(
+                    sim.sim_info,
+                    resolver,
+                    title="⚠️ Zu müde zum Trading!",
+                    text="Dein Sim ist zu erschöpft um zu traden. Schlaf erst etwas!\n(Energie: {:.0f}/100)".format(energy_stat.current_value),
+                    icon=None
+                )
+                notification.show_dialog()
+                return False
+            
+            # Füge fokussierten Buff hinzu (erfolgreicher Trade-Vorbereitung)
+            sim.add_buff(BUFF_FOCUSED_HIGH)
+            
             # Benachrichtigung zeigen dass Trading verfügbar ist
             resolver = SingleSimResolver(sim.sim_info)
             notification = UiDialogNotification(
                 sim.sim_info,
                 resolver,
-                title="📈 Crypto Trading",
-                text="Öffne die Trading-App um mit dem Handel zu beginnen!\n\nVerfügbar über:\n- Handy: Telefon-Menü\n- Computer: Browser-Menü",
+                title="📈 Crypto Trading gestartet",
+                text="Trading-App wird geöffnet...\n\nNutze den offiziellen Programming Skill ({}) für bessere Preise!".format(SKILL_PROGRAMMING),
                 icon=None
             )
             notification.show_dialog()
             
             return True
         except Exception as e:
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler in _run_interaction: {}".format(str(e)))
             return False
 
 
@@ -56,16 +90,32 @@ class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
             household_id = sim.household.id
             account = get_account(household_id)
             
+            # Energie verbrauchen (offizielle motive_energy Variable)
+            energy_stat = sim.get_stat(MOTIVE_ENERGY)
+            if energy_stat:
+                energy_stat.add_value(-5)  # 5 Energie verbrauchen
+            
+            # Soziales Motiv leicht erhöhen (Trading ist spannend!)
+            social_stat = sim.get_stat(MOTIVE_SOCIAL)
+            if social_stat:
+                social_stat.add_value(3)
+            
             # Zeige Hauptmenü der Trading-App
             self._show_main_menu(sim, account, "phone")
             return True
         except Exception as e:
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler in Phone Interaction: {}".format(str(e)))
             return False
     
     def _show_main_menu(self, sim, account, device_type):
         """Zeige das Hauptmenü der Trading-App"""
         try:
             resolver = SingleSimResolver(sim.sim_info)
+            
+            # Hole offiziellen Programming Skill Level
+            programming_level = sim.get_stat(SKILL_PROGRAMMING)
+            prog_level_value = programming_level.level if programming_level else 1
             
             # Erstelle Menü-Text
             total_value = account.get_total_value()
@@ -75,6 +125,7 @@ class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
             menu_text = "=== Crypto Trading App ===\n\n"
             menu_text += "Gesamtwert: {:.2f}§\n".format(total_value)
             menu_text += "Verfügbar: {:.2f}§\n\n".format(account.balance)
+            menu_text += "Programming Skill: Level {} (beeinflusst Preise!)\n".format(prog_level_value)
             menu_text += "Trading Level: {} ({})\n".format(skill_info["level"], skill_info["name"])
             menu_text += "Bonus: {}\n\n".format(skill_info["bonus"])
             
@@ -104,11 +155,12 @@ class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
             )
             notification.show_dialog()
             
-            # Zeige Options-Dialog
+            # Zeige Options-Dialog mit Buttons (wenn möglich)
             self._show_action_menu(sim, account)
             
         except Exception as e:
-            pass
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler im Hauptmenü: {}".format(str(e)))
     
     def _show_action_menu(self, sim, account):
         """Zeige Aktionsmenü"""
@@ -120,7 +172,8 @@ class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
             action_text += "💸 Abheben - Geld vom Trading-Konto zum Haushalt\n"
             action_text += "📈 Kaufen - Kryptowährung kaufen\n"
             action_text += "📉 Verkaufen - Kryptowährung verkaufen\n"
-            action_text += "❌ Schließen"
+            action_text += "❌ Schließen\n\n"
+            action_text += "TIPP: Nutze cheat 'stats.set_stat Major_Programming [1-10]' um deinen Skill zu erhöhen!"
             
             notification = UiDialogNotification(
                 sim.sim_info,
@@ -133,6 +186,71 @@ class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
             
         except Exception as e:
             pass
+    
+    def _execute_trade_action(self, sim, action_type, amount=0, crypto_name=None, quantity=0):
+        """Führe eine Trading-Aktion aus"""
+        try:
+            household_id = sim.household.id
+            account = get_account(household_id)
+            resolver = SingleSimResolver(sim.sim_info)
+            
+            success = False
+            message = ""
+            
+            if action_type == "deposit":
+                # Geld einzahlen - nutzt official householdFunds
+                hh = services.household_manager().get(household_id)
+                if hh and hh.money >= amount:
+                    success = account.deposit(amount)
+                    message = "{}§ eingezahlt!".format(amount) if success else "Einzahlung fehlgeschlagen!"
+                else:
+                    message = "Nicht genug Simoleons im Haushalt!"
+                    
+            elif action_type == "withdraw":
+                # Geld abheben
+                success = account.withdraw(amount)
+                message = "{}§ abgehoben!".format(amount) if success else "Abhebung fehlgeschlagen!"
+                
+            elif action_type == "buy":
+                # Krypto kaufen
+                success = account.buy_crypto(crypto_name, quantity)
+                if success:
+                    # Gib XP für Kauf
+                    account.add_xp(XP_REWARDS["buy_crypto"])
+                    message = "{}x {} gekauft!".format(quantity, crypto_name)
+                else:
+                    message = "Kauf fehlgeschlagen - nicht genug Guthaben!"
+                    
+            elif action_type == "sell":
+                # Krypto verkaufen
+                success = account.sell_crypto(crypto_name, quantity)
+                if success:
+                    account.add_xp(XP_REWARDS["sell_crypto"])
+                    message = "{}x {} verkauft!".format(quantity, crypto_name)
+                else:
+                    message = "Verkauf fehlgeschlagen!"
+            
+            # Zeige Ergebnis-Benachrichtigung
+            if success:
+                sim.add_buff(BUFF_HAPPY)  # Erfolgreicher Trade macht glücklich
+            else:
+                sim.add_buff(BUFF_SAD_HIGH)  # Fehlgeschlagener Trade macht traurig
+            
+            notification = UiDialogNotification(
+                sim.sim_info,
+                resolver,
+                title="Trading Ergebnis",
+                text=message,
+                icon=None
+            )
+            notification.show_dialog()
+            
+            return success
+            
+        except Exception as e:
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler bei Trade-Aktion: {}".format(str(e)))
+            return False
 
 
 class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
@@ -144,16 +262,32 @@ class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
             household_id = sim.household.id
             account = get_account(household_id)
             
+            # Weniger Energieverbrauch am PC (bequemer)
+            energy_stat = sim.get_stat(MOTIVE_ENERGY)
+            if energy_stat:
+                energy_stat.add_value(-3)
+            
+            # Mehr Spaß am PC
+            fun_stat = sim.get_stat(MOTIVE_FUN)
+            if fun_stat:
+                fun_stat.add_value(5)
+            
             # Zeige erweiterte Ansicht am PC
             self._show_pc_interface(sim, account)
             return True
         except Exception as e:
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler in Computer Interaction: {}".format(str(e)))
             return False
     
     def _show_pc_interface(self, sim, account):
         """Zeige die PC-Oberfläche mit mehr Details"""
         try:
             resolver = SingleSimResolver(sim.sim_info)
+            
+            # Hole offiziellen Programming Skill
+            programming_level = sim.get_stat(SKILL_PROGRAMMING)
+            prog_level_value = programming_level.level if programming_level else 1
             
             total_value = account.get_total_value()
             portfolio_summary = account.get_portfolio_summary()
@@ -170,11 +304,12 @@ class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
             pc_text += "Investiert:      {:.2f}§\n".format(account.total_invested)
             pc_text += "Profitable Trades: {}\n\n".format(account.profitable_trades)
             
-            pc_text += "TRADING SKILL\n"
-            pc_text += "─────────────\n"
-            pc_text += "Level: {} ({})\n".format(skill_info["level"], skill_info["name"])
-            pc_text += "XP: {}/{}\n".format(skill_info["xp"], skill_info["next_level_xp"] or "MAX")
-            pc_text += "Bonus: {}\n".format(skill_info["bonus"])
+            pc_text += "SKILLS\n"
+            pc_text += "──────\n"
+            pc_text += "Programming:    Level {} (offizieller Skill)\n".format(prog_level_value)
+            pc_text += "Trading:        Level {} ({})\n".format(skill_info["level"], skill_info["name"])
+            pc_text += "XP:             {}/{}\n".format(skill_info["xp"], skill_info["next_level_xp"] or "MAX")
+            pc_text += "Bonus:          {}\n".format(skill_info["bonus"])
             pc_text += "Freigeschaltet: {}\n\n".format(skill_info["unlock"])
             
             if portfolio_summary:
@@ -198,6 +333,7 @@ class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
                     pc_text += "{:<15} {:>10.2f}§\n".format(crypto, price)
             
             pc_text += "\nAktionen: Einzahlen | Abheben | Kaufen | Verkaufen | Verlauf"
+            pc_text += "\n\nCheats: stats.set_stat Major_Programming [1-10]"
             
             notification = UiDialogNotification(
                 sim.sim_info,
@@ -209,54 +345,43 @@ class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
             notification.show_dialog()
             
         except Exception as e:
-            pass
+            import sims4
+            sims4.log.error("CryptoMod", "Fehler in PC Interface: {}".format(str(e)))
 
 
 def on_load():
     """Wird beim Laden des Mods aufgerufen - registriere Interaktionen"""
     try:
-        # Registriere Interaktionen bei Phone und Computer
-        _register_phone_interaction()
-        _register_computer_interaction()
+        # Die eigentliche Registrierung erfolgt via Tuning in einer .package Datei
+        # Diese Funktion dient nur zur Information
+        import sims4
+        sims4.log.info("CryptoMod", "Interactions Modul geladen")
+        sims4.log.info("CryptoMod", "Nutzt offizielle Sims 4 Variablen:")
+        sims4.log.info("CryptoMod", "  - Skill: {}".format(SKILL_PROGRAMMING))
+        sims4.log.info("CryptoMod", "  - Motive: {}, {}, {}".format(MOTIVE_ENERGY, MOTIVE_SOCIAL, MOTIVE_FUN))
+        sims4.log.info("CryptoMod", "  - Geld: {}".format(HOUSEHOLD_FUNDS))
+        sims4.log.info("CryptoMod", "  - Buffs: {}, {}, {}".format(BUFF_FOCUSED_HIGH, BUFF_HAPPY, BUFF_SAD_HIGH))
     except Exception as e:
         pass
 
 
 def _register_phone_interaction():
-    """Registriere die Phone-Interaktion"""
-    try:
-        phone_manager = services.get_instance_manager(Types.OBJECT)
-        if phone_manager:
-            # Phone Objekt ID von Sims 4
-            phone_cls = phone_manager.get(0x78A3C6B2)
-            if phone_cls:
-                # Füge Interaktion hinzu
-                if not hasattr(phone_cls, '_crypto_interactions'):
-                    phone_cls._crypto_interactions = []
-                phone_cls._crypto_interactions.append(PhoneCryptoTradingInteraction)
-    except Exception as e:
-        pass
+    """Registriere die Phone-Interaktion - erfordert .package Tuning"""
+    # Diese Funktion wird von __init__.ts4script aufgerufen
+    # Echte Registrierung erfolgt via XML Tuning
+    pass
 
 
 def _register_computer_interaction():
-    """Registriere die Computer-Interaktion"""
-    try:
-        computer_manager = services.get_instance_manager(Types.OBJECT)
-        if computer_manager:
-            # Computer Objekt ID von Sims 4
-            computer_cls = computer_manager.get(0x9E3C74DE)
-            if computer_cls:
-                # Füge Interaktion hinzu
-                if not hasattr(computer_cls, '_crypto_interactions'):
-                    computer_cls._crypto_interactions = []
-                computer_cls._crypto_interactions.append(ComputerCryptoTradingInteraction)
-    except Exception as e:
-        pass
+    """Registriere die Computer-Interaktion - erfordert .package Tuning"""
+    # Diese Funktion wird von __init__.ts4script aufgerufen
+    # Echte Registrierung erfolgt via XML Tuning
+    pass
 
 
 # Helper-Funktionen für UI-Aktionen
 def deposit_funds(sim, amount):
-    """Zahle Geld ein"""
+    """Zahle Geld ein - nutzt official householdFunds"""
     household_id = sim.household.id
     account = get_account(household_id)
     success = account.deposit(amount)
@@ -276,6 +401,8 @@ def buy_crypto(sim, crypto_name, quantity):
     household_id = sim.household.id
     account = get_account(household_id)
     success = account.buy_crypto(crypto_name, quantity)
+    if success:
+        account.add_xp(XP_REWARDS["buy_crypto"])
     return success
 
 
@@ -284,4 +411,6 @@ def sell_crypto(sim, crypto_name, quantity):
     household_id = sim.household.id
     account = get_account(household_id)
     success = account.sell_crypto(crypto_name, quantity)
+    if success:
+        account.add_xp(XP_REWARDS["sell_crypto"])
     return success

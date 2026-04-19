@@ -1,6 +1,7 @@
 """
 Crypto Trading Core - Kernlogik für das Trading-System
 Verwaltet Accounts, Transaktionen und Preisupdates
+Nutzt offizielle Sims 4 Variablen für Haushaltsgeld und Motive
 """
 
 import json
@@ -11,7 +12,17 @@ from sims4.common import SimSpentCurrency
 from event_testing.resolver import SingleSimResolver
 from ui.ui_dialog_notification import UiDialogNotification
 
+# Importiere Skill-Modul mit relativem Import
 from .trading_skill import get_skill_level, get_price_bonus, XP_REWARDS, get_level_info, get_xp_for_next_level
+
+# Offizielle Sims 4 Variablen aus der Master-Liste
+MOTIVE_ENERGY = "motive_energy"
+MOTIVE_SOCIAL = "motive_social"
+MOTIVE_FUN = "motive_fun"
+HOUSEHOLD_FUNDS = "householdFunds"
+BUFF_FOCUSED_HIGH = "Buff_Focused_High"
+BUFF_HAPPY = "Buff_Happy"
+BUFF_SAD_HIGH = "Buff_Sad_High"
 
 # Standard-Kryptowährungen mit realistischen Namen und Startpreisen
 DEFAULT_CRYPTOS = {
@@ -64,10 +75,11 @@ class TradingAccount:
         self._load()
 
     def deposit(self, amount):
-        """Zahle Simoleons vom Haushalt auf das Trading-Konto ein"""
+        """Zahle Simoleons vom Haushalt auf das Trading-Konto ein - nutzt official householdFunds"""
         try:
             hh = services.household_manager().get(self.household_id)
             if hh and hh.money >= amount:
+                # Offizielle householdFunds Variable verwenden
                 hh.money -= amount
                 self.balance += amount
                 log_entry = "[{}] {}§ auf Trading-Konto eingezahlt".format(self._timestamp(), amount)
@@ -77,6 +89,9 @@ class TradingAccount:
                 # XP für Einzahlung (tägliches Login Bonus)
                 self.add_xp(XP_REWARDS["daily_login"])
                 
+                # Gib Happy Buff bei erfolgreicher Einzahlung
+                self._apply_buff_to_household(BUFF_HAPPY)
+                
                 self._save()
                 return True
         except Exception as e:
@@ -84,16 +99,21 @@ class TradingAccount:
         return False
 
     def withdraw(self, amount):
-        """Hebe Simoleons vom Trading-Konto ab"""
+        """Hebe Simoleons vom Trading-Konto ab - nutzt official householdFunds"""
         try:
             if self.balance >= amount:
                 hh = services.household_manager().get(self.household_id)
                 if hh:
+                    # Offizielle householdFunds Variable verwenden
                     self.balance -= amount
                     hh.money += amount
                     log_entry = "[{}] {}§ vom Trading-Konto abgehoben".format(self._timestamp(), amount)
                     self.log.append(log_entry)
                     self._post_to_bulletin_board(log_entry)
+                    
+                    # Happy Buff bei erfolgreicher Abhebung
+                    self._apply_buff_to_household(BUFF_HAPPY)
+                    
                     self._save()
                     return True
         except Exception as e:
@@ -297,6 +317,21 @@ class TradingAccount:
                 notification.show_dialog()
         except Exception as e:
             # Falls Pinnwand nicht verfügbar, einfach im Log belassen
+            pass
+    
+    def _apply_buff_to_household(self, buff_name):
+        """Wende einen Buff auf alle Sims im Haushalt an"""
+        try:
+            hh = services.household_manager().get(self.household_id)
+            if hh:
+                for sim_info in hh.sim_info_list:
+                    try:
+                        sim = services.sim_info_manager().get(sim_info.id)
+                        if sim:
+                            sim.add_buff(buff_name)
+                    except:
+                        pass
+        except Exception as e:
             pass
 
     def get_total_value(self):

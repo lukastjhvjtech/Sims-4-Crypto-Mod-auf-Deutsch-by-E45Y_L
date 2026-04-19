@@ -1,49 +1,39 @@
 ```
-# Sims 4 mod build artifacts
-*.ts4script.meta
+# Sims 4 script files
+*.ts4script
 
-# General Python artifacts (if any Python components)
+# Compiled Python files
 *.pyc
 __pycache__/
 
-# Build/dist directories
-build/
-dist/
-*.egg-info/
-
-# Logs
+# Logs and temporary files
 *.log
-
-# Temporary files
 *.tmp
 *.swp
 
-# Environment files
+# Environment variables
 .env
 .env.local
 *.env.*
 
-# Editors/IDE
+# Editors
 .vscode/
 .idea/
-
-# OS specific
-.DS_Store
-Thumbs.db
 
 # Coverage reports
 coverage/
 htmlcov/
 *.coverage
 
-# Dependency caches
+# Build artifacts
+dist/
+build/
+target/
+
+# Dependencies
 node_modules/
 .venv/
 venv/
 .mypy_cache/
 .pytest_cache/
-.julia/
-zig-cache/
-target/
-.gradle/
 ```
