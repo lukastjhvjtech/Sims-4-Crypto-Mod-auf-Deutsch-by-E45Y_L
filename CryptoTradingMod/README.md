@@ -1,4 +1,4 @@
-# Crypto Trading App für Sims 4
+# Crypto Trading App für Sims 4 - Vollständige Mod
 
 Eine vollständige Mod für Die Sims 4, die ein realistisches Kryptowährungs-Trading-System hinzufügt.
 
@@ -27,7 +27,7 @@ Eine vollständige Mod für Die Sims 4, die ein realistisches Kryptowährungs-Tr
   - Level 10: 35% Rabatt!
 
 ### 📊 Grafische Darstellung
-- **Kurs-Charts**: Zeigt die Preisentwicklung jeder Kryptowährung
+- **Kurs-Charts**: Zeigt die Preisentwicklung jeder Kryptowährung (wenn PIL installiert ist)
 - **Portfolio-Übersicht**: Visuelle Darstellung deiner Assets
 - **Farbcodierung**: Grün bei steigenden, rot bei fallenden Kursen
 
@@ -46,47 +46,56 @@ Alle Aktivitäten werden automatisch protokolliert:
 ## 📁 Installation
 
 ### WICHTIG: Ordnerstruktur!
+
 Sims 4 kann Skript-Mods nur laden, wenn sie sich **maximal einen Ordner tief** im Mods-Verzeichnis befinden.
 
 #### Korrekte Installation:
 ```
 Dokumente/Electronic Arts/Die Sims 4/Mods/
-├── __init__.py          ← HIER (oder in einem Unterordner)
-├── trading_core.py      ← HIER
-├── trading_skill.py     ← HIER
-├── interactions.py      ← HIER
-├── trading_ui.py        ← HIER
-└── TradingData/         ← Dieser Ordner wird automatisch erstellt
+└── sims4crypto/                    ← EIN Ordner tief!
+    ├── __init__.ts4script
+    ├── trading_core.ts4script
+    ├── trading_skill.ts4script
+    ├── interactions.ts4script
+    └── trading_ui.ts4script
 ```
 
 #### FALSCH (zu tief verschachtelt):
 ```
 Dokumente/Electronic Arts/Die Sims 4/Mods/
-└── Crypto-Trading-App-f-r-Sims-4-main/  ← ZU TIEF!
-    └── Crypto-Trading-App-f-r-Sims-4-main/
-        └── __init__.py
+└── Crypto-Trading-App/             ← ZU TIEF!
+    └── Crypto-Trading-App/
+        └── __init__.ts4script
 ```
 
 ### Schritte:
-1. Alle `.py`-Dateien direkt in den `Mods`-Ordner kopieren (oder in EINEN Unterordner)
-2. Sicherstellen, dass keine Sonderzeichen im Ordnernamen sind
-3. Im Spiel unter "Optionen" → "Sonstiges":
+
+1. **Alle `.ts4script`-Dateien in EINEN Unterordner kopieren** (`sims4crypto`)
+2. **Sicherstellen, dass keine Sonderzeichen im Ordnernamen sind**
+3. **Im Spiel unter "Optionen" → "Sonstiges":**
    - ✅ "Benutzerdefinierte Inhalte und Mods zulassen" aktivieren
    - ✅ "Skript-Mods zulassen" aktivieren
-4. "Änderungen anwenden" klicken und Spiel neu starten
-5. Cache löschen (optional aber empfohlen):
+4. **"Änderungen anwenden" klicken und Spiel neu starten**
+5. **Cache löschen (optional aber empfohlen):**
    - `localthumbcache.package` im Sims 4 Hauptordner löschen
    - `cache`-Ordner im Sims 4 Hauptordner leeren
 
-## 🎮 gameplay
+## 🎮 Gameplay
 
 ### Erster Start:
-1. Öffne die Trading-App auf deinem Handy oder Computer
-2. Zahle Geld vom Haushaltskonto auf dein Trading-Konto ein (mindestens 100§ empfohlen)
-3. Kaufe deine erste Kryptowährung (SimCoin ist gut für Anfänger)
-4. Beobachte die Kursentwicklung täglich
+
+1. **Öffne die Trading-App** auf deinem Handy oder Computer
+   - Handy: Telefon-Menü → "Crypto Trading"
+   - Computer: Webbrowser → "Crypto Trading Platform"
+
+2. **Zahle Geld** vom Haushaltskonto auf dein Trading-Konto ein (mindestens 100§ empfohlen)
+
+3. **Kaufe deine erste Kryptowährung** (SimCoin ist gut für Anfänger)
+
+4. **Beobachte die Kursentwicklung** täglich
 
 ### Tipps:
+
 - **Diversifiziere**: Kaufe verschiedene Kryptos statt alles in eine zu investieren
 - **Geduld**: Kurse schwanken täglich - verkaufe nicht bei jedem Dip
 - **Skill-Level**: Je höher dein Level, desto besser deine Kaufpreise
@@ -95,14 +104,17 @@ Dokumente/Electronic Arts/Die Sims 4/Mods/
 ## 🔧 Technische Details
 
 ### Dateien:
-- `__init__.py`: Hauptmodul mit Lade-/Entladefunktionen
-- `trading_core.py`: Kernlogik (Accounts, Transaktionen, Preisupdates)
-- `trading_skill.py`: Skill-System mit 10 Leveln und XP-Berechnung
-- `interactions.py`: Interaktionen für Handy und PC
-- `trading_ui.py`: Chart-Generierung (PNG-Bilder)
-- `TradingData/`: Automatisch erstellter Speicherordner für Savegames
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `__init__.ts4script` | Hauptmodul mit Lade-/Entladefunktionen und Hooks |
+| `trading_core.ts4script` | Kernlogik (Accounts, Transaktionen, Preisupdates) |
+| `trading_skill.ts4script` | Skill-System mit 10 Leveln und XP-Berechnung |
+| `interactions.ts4script` | Interaktionen für Handy und PC |
+| `trading_ui.ts4script` | Chart-Generierung (PNG-Bilder, optional mit PIL) |
 
 ### Kompatibilität:
+
 - ✅ MC Command Center
 - ✅ XML Injector
 - ✅ SAC Zombie Apocalypse
@@ -112,18 +124,31 @@ Dokumente/Electronic Arts/Die Sims 4/Mods/
 ## 🐛 Fehlerbehebung
 
 ### Mod wird nicht geladen:
-1. Überprüfe die Ordnerstruktur (siehe Installation)
+
+1. Überprüfe die Ordnerstruktur (maximal 1 Ordner tief!)
 2. Lösche `localthumbcache.package`
 3. Stelle sicher, dass Skript-Mods aktiviert sind
 4. Prüfe die Spielversion (Mod benötigt neuestes Update)
+5. Überprüfe `LastException.txt` auf Fehler
 
-### Keine Benachrichtigungen:
-- Das ist normal, wenn die Pinnwand-Funktion nicht verfügbar ist
-- Alle Aktionen werden trotzdem im internen Log gespeichert
+### Keine Interaktionen im Handy/PC sichtbar:
+
+1. **Warte 1-2 Minuten** nach dem Laden des Spiels
+2. **Klicke auf das Objekt** (Handy/PC) und warte auf das Menü
+3. **Scrolle im Menü** - die Option könnte weiter unten sein
+4. **Teste ohne andere Mods** um Konflikte auszuschließen
 
 ### Charts werden nicht angezeigt:
-- Stelle sicher, dass PIL/Pillow installiert ist (im echten Mod enthalten)
-- Überprüfe Schreibrechte im Mods-Ordner
+
+- Das ist normal wenn PIL/Pillow nicht verfügbar ist
+- Alle Funktionen bleiben nutzbar, nur die grafischen Charts fehlen
+- Die Text-basierte Anzeige funktioniert immer
+
+### Keine Benachrichtigungen:
+
+- Das kann vorkommen wenn die UI-Dialoge blockiert werden
+- Alle Aktionen werden trotzdem im internen Log gespeichert
+- Über das Menü "Verlauf" kannst du alle Transaktionen sehen
 
 ## 📝 Changelog
 
@@ -132,7 +157,7 @@ Dokumente/Electronic Arts/Die Sims 4/Mods/
 - ✅ Zwischenkonto-System (0§ Startguthaben)
 - ✅ 10-Level Skill-System mit XP und Boni
 - ✅ Tägliche Kursaktualisierungen
-- ✅ Grafische Charts für Kurse und Portfolio
+- ✅ Text-basierte Charts (PIL optional)
 - ✅ Pinnwand-Protokoll für alle Aktionen
 - ✅ Handy- und PC-Unterstützung
 - ✅ Portfolio-Meilensteine
@@ -146,10 +171,12 @@ Weiterverbreitung nur mit Quellenangabe erlaubt.
 ## 👨‍💻 Support
 
 Bei Fragen oder Problemen:
-1. Überprüfe zuerst diese README
+
+1. Überprüfe zuerst die INSTALLATION.txt
 2. Lösche Cache und starte neu
 3. Überprüfe die Ordnerstruktur
 4. Aktiviere Skript-Mods in den Einstellungen
+5. Prüfe LastException.txt auf Fehlermeldungen
 
 ---
 

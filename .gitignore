@@ -1,15 +1,15 @@
 ```
-# Compressed archives
-*.tar.gz
+# Sims 4 mod build artifacts
+*.ts4script.meta
 
-# Python artifacts (from old Python files that were deleted)
+# General Python artifacts (if any Python components)
 *.pyc
 __pycache__/
 
-# Environment files
-.env
-.env.local
-*.env.*
+# Build/dist directories
+build/
+dist/
+*.egg-info/
 
 # Logs
 *.log
@@ -18,7 +18,32 @@ __pycache__/
 *.tmp
 *.swp
 
-# Editors
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors/IDE
 .vscode/
 .idea/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
+
+# Dependency caches
+node_modules/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.julia/
+zig-cache/
+target/
+.gradle/
 ```
