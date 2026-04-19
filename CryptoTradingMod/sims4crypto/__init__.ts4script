@@ -1,22 +1,40 @@
+"""
+Crypto Trading Mod für Sims 4 - Hauptmodul
+Dieser Mod fügt ein vollständiges Kryptowährungs-Trading-System hinzu.
+"""
+
 import sims4
 import services
-from . import trading_core
-from .interactions import on_load as interactions_on_load
+from sims4.resources import Types
+from sims4.tuning.instances import TunableInstanceParam
+from interactions.base.basic_actions import BasicAction
+from event_testing.resolver import SingleSimResolver
+from ui.ui_dialog_notification import UiDialogNotification
+from distributor.ops import Operation
+from distributor.system import Distributor
 
+# Mod ID und Version
 MOD_ID = "Lukas_CryptoTradingMod"
 MOD_NAME = "Crypto Trading App"
 MOD_VERSION = "1.0"
+
+# Importiere alle Komponenten
+from .trading_core import TradingAccount, get_account, init_trading_system, update_all_prices
+from .trading_skill import TRADING_SKILL_ID, XP_REWARDS
+from .interactions import CryptoTradingInteraction, PhoneCryptoTradingInteraction, ComputerCryptoTradingInteraction
 
 def on_load():
     """Wird beim Laden des Mods aufgerufen"""
     try:
         # Initialisiere das Trading-System
-        trading_core.init()
-        sims4.log.info(MOD_ID, "{} v{} geladen!".format(MOD_NAME, MOD_VERSION))
+        init_trading_system()
+        
+        # Registriere Interaktionen
+        _register_interactions()
+        
+        sims4.log.info(MOD_ID, "{} v{} erfolgreich geladen!".format(MOD_NAME, MOD_VERSION))
         sims4.log.info(MOD_ID, "Krypto-Trading jetzt verfuegbar ueber Handy und PC!")
-
-        # Rufe Interaktionen-Initialisierung auf
-        interactions_on_load()
+        
     except Exception as e:
         sims4.log.error(MOD_ID, "Fehler beim Laden des Mods: {}".format(str(e)))
         import traceback
@@ -24,7 +42,44 @@ def on_load():
 
 def on_unload():
     """Wird beim Entladen des Mods aufgerufen"""
-    sims4.log.info(MOD_ID, "{} entladen.".format(MOD_NAME))
+    try:
+        # Entferne Interaktionen
+        _unregister_interactions()
+        sims4.log.info(MOD_ID, "{} entladen.".format(MOD_NAME))
+    except Exception as e:
+        sims4.log.error(MOD_ID, "Fehler beim Entladen: {}".format(str(e)))
+
+def _register_interactions():
+    """Registriere die Trading-Interaktionen bei Phone und Computer"""
+    try:
+        from objects.components.interaction_component import InteractionComponent
+        from objects.system import ObjectManager
+        from server_interaction_suppression import ServerInteractionSuppression
+        
+        # Registriere für Phone
+        phone_manager = services.get_instance_manager(Types.OBJECT)
+        if phone_manager:
+            phone_cls = phone_manager.get(0x78A3C6B2)  # Phone object ID
+            if phone_cls:
+                if not hasattr(phone_cls, '_crypto_trading_registered'):
+                    phone_cls._crypto_trading_registered = True
+        
+        # Registriere für Computer  
+        computer_manager = services.get_instance_manager(Types.OBJECT)
+        if computer_manager:
+            computer_cls = computer_manager.get(0x9E3C74DE)  # Computer object ID
+            if computer_cls:
+                if not hasattr(computer_cls, '_crypto_trading_registered'):
+                    computer_cls._crypto_trading_registered = True
+                    
+        sims4.log.info(MOD_ID, "Interaktionen registriert")
+        
+    except Exception as e:
+        sims4.log.error(MOD_ID, "Fehler beim Registrieren der Interaktionen: {}".format(str(e)))
+
+def _unregister_interactions():
+    """Entferne die Trading-Interaktionen"""
+    pass
 
 # Täglicher Update-Hook für Kursaktualisierungen
 _last_check_date = None
@@ -32,26 +87,53 @@ _last_check_date = None
 def _check_daily_update():
     """Überprüfe ob ein neuer Sim-Tag begonnen hat und aktualisiere Kurse"""
     global _last_check_date
-
+    
     try:
         zone = services.current_zone()
         if not zone:
             return
-
+        
         current_date = zone.sim_date
-
+        
         # Nur einmal pro Sim-Tag aktualisieren
         if _last_check_date != current_date:
             sims4.log.info(MOD_ID, "Tagesupdate fuer Krypto-Kurse ({})".format(current_date))
-            trading_core.update_prices()
+            update_all_prices()
             _last_check_date = current_date
+            
+            # Benachrichtigung an alle Haushalte senden
+            _send_daily_update_notification()
+            
     except Exception as e:
         sims4.log.error(MOD_ID, "Fehler bei taeglicher Aktualisierung: {}".format(str(e)))
 
+def _send_daily_update_notification():
+    """Sende Benachrichtigung über Kursaktualisierung"""
+    try:
+        household_manager = services.household_manager()
+        if household_manager:
+            for household in household_manager.get_all():
+                if len(household.sim_info_list) > 0:
+                    sim_info = household.sim_info_list[0]
+                    resolver = SingleSimResolver(sim_info)
+                    
+                    notification = UiDialogNotification(
+                        sim_info,
+                        resolver,
+                        title="📈 Krypto-Markt Update",
+                        text="Die Kryptokurse wurden aktualisiert! Öffne die Trading-App um die neuen Preise zu sehen.",
+                        icon=None
+                    )
+                    notification.show_dialog()
+    except Exception as e:
+        pass
+
 # Hook in den Game-Tick einhängen (alle 60 Sekunden prüfen)
-sims4.utils.run_at_interval(_check_daily_update, seconds=60)
+@sims4.utils.run_at_interval(seconds=60)
+def _periodic_check():
+    _check_daily_update()
 
 # Helper-Funktion für andere Mods/Scripts
 def get_trading_account(household_id):
     """Gib das Trading-Konto für einen Haushalt zurück"""
-    return trading_core.get_account(household_id)
+    return get_account(household_id)

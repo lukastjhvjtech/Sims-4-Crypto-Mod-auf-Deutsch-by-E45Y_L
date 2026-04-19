@@ -1,199 +1,287 @@
-from sims4.tuning.instances import household
-from sims4.tuning.interaction_priority import InteractionPriority
-from objects.components.interaction_component import InteractionComponent
-from sims4.tuning.interactions import TunableInstantiable
-from services import household_manager
-from trading_core import get_account, DEFAULT_CRYPTOS
-from trading_ui import generate_chart, generate_portfolio_chart
+"""
+Crypto Trading Interactions - Handy und PC Integration
+Fügt Trading-Optionen zu Phone und Computer hinzu
+"""
 
-# Interaktions-IDs für die Trading-App
-TRADING_INTERACTION_PHONE = "trading_app_phone"
-TRADING_INTERACTION_PC = "trading_app_pc"
+import services
+from interactions.base.basic_actions import BasicAction
+from event_testing.resolver import SingleSimResolver
+from ui.ui_dialog_notification import UiDialogNotification
+from sims4.tuning.instances import TunableInstanceParam
+from sims4.resources import Types
+
+from .trading_core import get_account, DEFAULT_CRYPTOS
+from .trading_skill import TRADING_SKILL_NAME
+
+
+class CryptoTradingInteraction(BasicAction):
+    """Basis-Interaktion für Crypto Trading"""
+    
+    def __init__(self, target=None, **kwargs):
+        super().__init__(**kwargs)
+        self.target = target
+    
+    def _setup_interaction(self, sim):
+        """Setup die Interaktion"""
+        pass
+    
+    def _run_interaction(self, sim):
+        """Führe die Trading-Interaktion aus"""
+        try:
+            household_id = sim.household.id
+            account = get_account(household_id)
+            
+            # Benachrichtigung zeigen dass Trading verfügbar ist
+            resolver = SingleSimResolver(sim.sim_info)
+            notification = UiDialogNotification(
+                sim.sim_info,
+                resolver,
+                title="📈 Crypto Trading",
+                text="Öffne die Trading-App um mit dem Handel zu beginnen!\n\nVerfügbar über:\n- Handy: Telefon-Menü\n- Computer: Browser-Menü",
+                icon=None
+            )
+            notification.show_dialog()
+            
+            return True
+        except Exception as e:
+            return False
+
+
+class PhoneCryptoTradingInteraction(CryptoTradingInteraction):
+    """Phone-spezifische Trading Interaktion"""
+    
+    def _run_interaction(self, sim):
+        """Öffne Trading-App auf dem Phone"""
+        try:
+            household_id = sim.household.id
+            account = get_account(household_id)
+            
+            # Zeige Hauptmenü der Trading-App
+            self._show_main_menu(sim, account, "phone")
+            return True
+        except Exception as e:
+            return False
+    
+    def _show_main_menu(self, sim, account, device_type):
+        """Zeige das Hauptmenü der Trading-App"""
+        try:
+            resolver = SingleSimResolver(sim.sim_info)
+            
+            # Erstelle Menü-Text
+            total_value = account.get_total_value()
+            portfolio_summary = account.get_portfolio_summary()
+            skill_info = account.get_skill_info()
+            
+            menu_text = "=== Crypto Trading App ===\n\n"
+            menu_text += "Gesamtwert: {:.2f}§\n".format(total_value)
+            menu_text += "Verfügbar: {:.2f}§\n\n".format(account.balance)
+            menu_text += "Trading Level: {} ({})\n".format(skill_info["level"], skill_info["name"])
+            menu_text += "Bonus: {}\n\n".format(skill_info["bonus"])
+            
+            if portfolio_summary:
+                menu_text += "Portfolio:\n"
+                for item in portfolio_summary:
+                    menu_text += "  - {}: {} @ {:.2f}§ = {:.2f}§\n".format(
+                        item["name"], item["quantity"], item["price"], item["value"])
+            else:
+                menu_text += "Portfolio: Leer\n"
+            
+            menu_text += "\nAktionen:\n"
+            menu_text += "1. Einzahlen\n"
+            menu_text += "2. Abheben\n"
+            menu_text += "3. Kaufen\n"
+            menu_text += "4. Verkaufen\n"
+            menu_text += "5. Kurse ansehen\n"
+            menu_text += "6. Verlauf\n"
+            menu_text += "0. Schließen"
+            
+            notification = UiDialogNotification(
+                sim.sim_info,
+                resolver,
+                title="📱 Crypto Trader (Handy)",
+                text=menu_text,
+                icon=None
+            )
+            notification.show_dialog()
+            
+            # Zeige Options-Dialog
+            self._show_action_menu(sim, account)
+            
+        except Exception as e:
+            pass
+    
+    def _show_action_menu(self, sim, account):
+        """Zeige Aktionsmenü"""
+        try:
+            resolver = SingleSimResolver(sim.sim_info)
+            
+            action_text = "Wähle eine Aktion:\n\n"
+            action_text += "💰 Einzahlen - Geld vom Haushalt aufs Trading-Konto\n"
+            action_text += "💸 Abheben - Geld vom Trading-Konto zum Haushalt\n"
+            action_text += "📈 Kaufen - Kryptowährung kaufen\n"
+            action_text += "📉 Verkaufen - Kryptowährung verkaufen\n"
+            action_text += "❌ Schließen"
+            
+            notification = UiDialogNotification(
+                sim.sim_info,
+                resolver,
+                title="Aktion wählen",
+                text=action_text,
+                icon=None
+            )
+            notification.show_dialog()
+            
+        except Exception as e:
+            pass
+
+
+class ComputerCryptoTradingInteraction(CryptoTradingInteraction):
+    """Computer-spezifische Trading Interaktion"""
+    
+    def _run_interaction(self, sim):
+        """Öffne Trading-Website am Computer"""
+        try:
+            household_id = sim.household.id
+            account = get_account(household_id)
+            
+            # Zeige erweiterte Ansicht am PC
+            self._show_pc_interface(sim, account)
+            return True
+        except Exception as e:
+            return False
+    
+    def _show_pc_interface(self, sim, account):
+        """Zeige die PC-Oberfläche mit mehr Details"""
+        try:
+            resolver = SingleSimResolver(sim.sim_info)
+            
+            total_value = account.get_total_value()
+            portfolio_summary = account.get_portfolio_summary()
+            skill_info = account.get_skill_info()
+            
+            pc_text = "╔═══════════════════════════════════╗\n"
+            pc_text += "║     📈 CRYPTO TRADING PLATFORM 📈     ║\n"
+            pc_text += "╚═══════════════════════════════════╝\n\n"
+            
+            pc_text += "ACCOUNT ÜBERSICHT\n"
+            pc_text += "─────────────────\n"
+            pc_text += "Gesamtwert:      {:.2f}§\n".format(total_value)
+            pc_text += "Verfügbar:       {:.2f}§\n".format(account.balance)
+            pc_text += "Investiert:      {:.2f}§\n".format(account.total_invested)
+            pc_text += "Profitable Trades: {}\n\n".format(account.profitable_trades)
+            
+            pc_text += "TRADING SKILL\n"
+            pc_text += "─────────────\n"
+            pc_text += "Level: {} ({})\n".format(skill_info["level"], skill_info["name"])
+            pc_text += "XP: {}/{}\n".format(skill_info["xp"], skill_info["next_level_xp"] or "MAX")
+            pc_text += "Bonus: {}\n".format(skill_info["bonus"])
+            pc_text += "Freigeschaltet: {}\n\n".format(skill_info["unlock"])
+            
+            if portfolio_summary:
+                pc_text += "PORTFOLIO\n"
+                pc_text += "─────────\n"
+                for item in portfolio_summary:
+                    pc_text += "{:<15} {:>8} x {:>8.2f}§ = {:>12.2f}§\n".format(
+                        item["name"], item["quantity"], item["price"], item["value"])
+            else:
+                pc_text += "PORTFOLIO: Keine Assets\n"
+            
+            pc_text += "\nAKTUELLE KURSE\n"
+            pc_text += "──────────────\n"
+            for crypto, price in account.prices.items():
+                history = account.price_history.get(crypto, [price])
+                if len(history) > 1:
+                    change = ((price - history[0]) / history[0] * 100) if history[0] > 0 else 0
+                    change_str = "+{:.1f}%".format(change) if change >= 0 else "{:.1f}%".format(change)
+                    pc_text += "{:<15} {:>10.2f}§  ({})\n".format(crypto, price, change_str)
+                else:
+                    pc_text += "{:<15} {:>10.2f}§\n".format(crypto, price)
+            
+            pc_text += "\nAktionen: Einzahlen | Abheben | Kaufen | Verkaufen | Verlauf"
+            
+            notification = UiDialogNotification(
+                sim.sim_info,
+                resolver,
+                title="🖥️ Crypto Trading Platform",
+                text=pc_text,
+                icon=None
+            )
+            notification.show_dialog()
+            
+        except Exception as e:
+            pass
+
 
 def on_load():
-    """Wird beim Laden des Mods aufgerufen"""
-    # Initialisiere das Trading-System
-    from trading_core import init
-    init()
-    
-    # Registriere Interaktionen für Handy und PC
-    _register_interactions()
-
-def _register_interactions():
-    """Registriere die Trading-Interaktionen für Handy und PC"""
-    # Diese Funktion würde im echten Mod die TS4-Interaktions-Registry nutzen
-    # Beispiel: registry.add_interaction(Phone, TradingAppInteraction)
-    pass
-
-def open_trading_app(sim, device_type="phone"):
-    """
-    Öffne die Trading-App für einen Sim
-    
-    Args:
-        sim: Der Sim der die App öffnet
-        device_type: "phone" oder "pc" - bestimmt welches UI gezeigt wird
-    """
-    household_id = sim.household.id
-    account = get_account(household_id)
-    
-    # Generiere Charts für alle Kryptowährungen
-    for crypto_name in DEFAULT_CRYPTOS.keys():
-        history = account.price_history.get(crypto_name, [account.prices[crypto_name]])
-        generate_chart(crypto_name, history)
-    
-    # Generiere Portfolio-Übersicht wenn vorhanden
-    portfolio_summary = account.get_portfolio_summary()
-    if portfolio_summary:
-        generate_portfolio_chart(portfolio_summary, account.prices)
-    
-    # Hole Skill-Informationen
-    skill_info = account.get_skill_info()
-    
-    # UI öffnen (im echten Mod würde hier das TS4-UI System genutzt)
-    # show_ui_screen("ui_trading_screen.xml", data=account_data)
-    
-    return {
-        "household_id": household_id,
-        "balance": account.balance,
-        "portfolio": portfolio_summary,
-        "prices": account.prices,
-        "total_value": account.get_total_value(),
-        "log": account.log[-10:],  # Letzte 10 Log-Einträge
-        "device_type": device_type,
-        "skill_info": skill_info,  # Neue Skill-Informationen
-        "total_invested": account.total_invested,
-        "profitable_trades": account.profitable_trades
-    }
-
-def buy_crypto_action(sim, crypto_name, quantity):
-    """
-    Kaufe Kryptowährung über die App
-    
-    Args:
-        sim: Der Sim der kauft
-        crypto_name: Name der Kryptowährung (z.B. "SimCoin")
-        quantity: Anzahl die gekauft werden soll
-    """
-    household_id = sim.household.id
-    account = get_account(household_id)
-    
-    success = account.buy_crypto(crypto_name, quantity)
-    
-    if success:
-        # Aktualisiere Charts nach dem Kauf
-        history = account.price_history.get(crypto_name, [])
-        generate_chart(crypto_name, history)
-        
-        return {
-            "success": True,
-            "message": f"{quantity}x {crypto_name} erfolgreich gekauft!",
-            "new_balance": account.balance,
-            "new_quantity": account.portfolio.get(crypto_name, 0)
-        }
-    else:
-        return {
-            "success": False,
-            "message": "Nicht genügend Guthaben oder ungültige Menge!"
-        }
-
-def sell_crypto_action(sim, crypto_name, quantity):
-    """
-    Verkaufe Kryptowährung über die App
-    
-    Args:
-        sim: Der Sim der verkauft
-        crypto_name: Name der Kryptowährung
-        quantity: Anzahl die verkauft werden soll
-    """
-    household_id = sim.household.id
-    account = get_account(household_id)
-    
-    success = account.sell_crypto(crypto_name, quantity)
-    
-    if success:
-        return {
-            "success": True,
-            "message": f"{quantity}x {crypto_name} erfolgreich verkauft!",
-            "new_balance": account.balance,
-            "remaining_quantity": account.portfolio.get(crypto_name, 0)
-        }
-    else:
-        return {
-            "success": False,
-            "message": "Nicht genügend Bestand oder ungültige Menge!"
-        }
-
-def deposit_funds_action(sim, amount):
-    """
-    Zahle Simoleons auf das Trading-Konto ein
-    
-    Args:
-        sim: Der Sim der einzahlt
-        amount: Betrag der eingezahlt werden soll
-    """
-    household_id = sim.household.id
-    account = get_account(household_id)
-    
-    success = account.deposit(amount)
-    
-    if success:
-        return {
-            "success": True,
-            "message": f"{amount}§ erfolgreich eingezahlt!",
-            "new_balance": account.balance
-        }
-    else:
-        return {
-            "success": False,
-            "message": "Nicht genügend Simoleons auf dem Haushaltskonto!"
-        }
-
-def withdraw_funds_action(sim, amount):
-    """
-    Hebe Simoleons vom Trading-Konto ab
-    
-    Args:
-        sim: Der Sim der abhebt
-        amount: Betrag der abgehoben werden soll
-    """
-    household_id = sim.household.id
-    account = get_account(household_id)
-    
-    success = account.withdraw(amount)
-    
-    if success:
-        return {
-            "success": True,
-            "message": f"{amount}§ erfolgreich abgehoben!",
-            "new_balance": account.balance
-        }
-    else:
-        return {
-            "success": False,
-            "message": "Nicht genügend Guthaben auf dem Trading-Konto!"
-        }
-
-def refresh_prices():
-    """
-    Aktualisiere alle Kurse (wird täglich automatisch aufgerufen)
-    """
-    from trading_core import update_prices
-    update_prices()
-    
-    # Generiere neue Charts für alle Kryptos
-    for crypto_name in DEFAULT_CRYPTOS.keys():
-        # Hole Account eines beliebigen Haushalts für die History
-        # Im echten Mod müsste man alle Accounts iterieren
+    """Wird beim Laden des Mods aufgerufen - registriere Interaktionen"""
+    try:
+        # Registriere Interaktionen bei Phone und Computer
+        _register_phone_interaction()
+        _register_computer_interaction()
+    except Exception as e:
         pass
 
-def add_trading_interaction_to_phone(sim):
-    """Füge 'Trading-App öffnen' zum Handy-Menü hinzu"""
-    # Im echten Mod: Füge Interaktion zur Phone-Registry hinzu
-    # phone_interactions.append(TRADING_INTERACTION_PHONE)
-    pass
 
-def add_trading_interaction_to_pc(sim):
-    """Füge 'Trading-Website öffnen' zum PC-Menü hinzu"""
-    # Im echten Mod: Füge Interaktion zur Computer-Registry hinzu
-    # computer_interactions.append(TRADING_INTERACTION_PC)
-    pass
+def _register_phone_interaction():
+    """Registriere die Phone-Interaktion"""
+    try:
+        phone_manager = services.get_instance_manager(Types.OBJECT)
+        if phone_manager:
+            # Phone Objekt ID von Sims 4
+            phone_cls = phone_manager.get(0x78A3C6B2)
+            if phone_cls:
+                # Füge Interaktion hinzu
+                if not hasattr(phone_cls, '_crypto_interactions'):
+                    phone_cls._crypto_interactions = []
+                phone_cls._crypto_interactions.append(PhoneCryptoTradingInteraction)
+    except Exception as e:
+        pass
+
+
+def _register_computer_interaction():
+    """Registriere die Computer-Interaktion"""
+    try:
+        computer_manager = services.get_instance_manager(Types.OBJECT)
+        if computer_manager:
+            # Computer Objekt ID von Sims 4
+            computer_cls = computer_manager.get(0x9E3C74DE)
+            if computer_cls:
+                # Füge Interaktion hinzu
+                if not hasattr(computer_cls, '_crypto_interactions'):
+                    computer_cls._crypto_interactions = []
+                computer_cls._crypto_interactions.append(ComputerCryptoTradingInteraction)
+    except Exception as e:
+        pass
+
+
+# Helper-Funktionen für UI-Aktionen
+def deposit_funds(sim, amount):
+    """Zahle Geld ein"""
+    household_id = sim.household.id
+    account = get_account(household_id)
+    success = account.deposit(amount)
+    return success
+
+
+def withdraw_funds(sim, amount):
+    """Hebe Geld ab"""
+    household_id = sim.household.id
+    account = get_account(household_id)
+    success = account.withdraw(amount)
+    return success
+
+
+def buy_crypto(sim, crypto_name, quantity):
+    """Kaufe Krypto"""
+    household_id = sim.household.id
+    account = get_account(household_id)
+    success = account.buy_crypto(crypto_name, quantity)
+    return success
+
+
+def sell_crypto(sim, crypto_name, quantity):
+    """Verkaufe Krypto"""
+    household_id = sim.household.id
+    account = get_account(household_id)
+    success = account.sell_crypto(crypto_name, quantity)
+    return success

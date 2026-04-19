@@ -122,9 +122,12 @@ def get_price_bonus(level):
     bonus_str = level_info["bonus"]
     
     # Handle "Keine Gebühren" Fall
-    if "Keine Gebühren" in bonus_str:
+    if "Keine Gebühren" in bonus_str or "Keine" in bonus_str:
         return 0.0
     
     # Extrahiere Prozentzahl aus String wie "+2% bessere Kaufpreise"
     bonus_str = bonus_str.replace("+", "").replace("% bessere Kaufpreise", "")
-    return float(bonus_str) / 100.0
+    try:
+        return float(bonus_str) / 100.0
+    except ValueError:
+        return 0.0
